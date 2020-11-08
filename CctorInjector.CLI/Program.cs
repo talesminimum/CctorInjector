@@ -15,10 +15,16 @@ namespace CctorInjector.CLI
             ModuleDef module = ModuleDefMD.Load(args[0]);
 
             Injector Injector = new Injector(module, typeof(Test));
-            Injector.Inject();
+            Injector Injector2 = new Injector(module, typeof(Test2));
 
-            if (Injector.hasInjected)
-                Injector.AddCall("ExecuteMePlease");
+            Injector.Inject();
+            Injector2.Inject();
+
+            Injector.CallMethod("ExecuteMePlease");
+            Injector.CallMethod("ExecuteMePlease2");
+
+            Injector2.CallMethod("DontExecuteMe");
+            Injector2.CallMethod("DontExecuteMe2");
 
             SaveFile(module);
             Console.ReadLine();
@@ -26,20 +32,22 @@ namespace CctorInjector.CLI
 
         public void SaveFile(ModuleDef module)
         {
-            var opts = new ModuleWriterOptions(module)
-            {
-                Logger = DummyLogger.NoThrowInstance
-            };
+            var opts = new ModuleWriterOptions(module) { Logger = DummyLogger.NoThrowInstance };
+            opts.MetadataOptions.Flags = MetadataFlags.PreserveAll;
             module.Write("Test.exe", opts);
             Console.WriteLine("Module Saved.");
         }
     }
 
-    public class Test
+    internal class Test
     {
-        public static void ExecuteMePlease()
-        {
-            Console.WriteLine("Thanks!");
-        }
+        public static void ExecuteMePlease() => Console.WriteLine("Thanks!");
+        public static void ExecuteMePlease2() => Console.WriteLine("Thanks!");
+    }
+
+    internal class Test2
+    {
+        public static void DontExecuteMe() => Console.WriteLine("Hey! =X");
+        public static void DontExecuteMe2() => Console.WriteLine("Hey! =X");
     }
 }

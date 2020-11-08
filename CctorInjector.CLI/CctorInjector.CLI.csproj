@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <Reference Include="CctorInjector">
-      <HintPath>..\Lib\CctorInjector.dll</HintPath>
+      <HintPath>..\CctorInjector\bin\Debug\netcoreapp3.1\CctorInjector.dll</HintPath>
     </Reference>
     <Reference Include="dnlib">
       <HintPath>..\Lib\dnlib.dll</HintPath>

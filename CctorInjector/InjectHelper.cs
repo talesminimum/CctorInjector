@@ -3,7 +3,7 @@ using dnlib.DotNet.Emit;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CctorInjector.InjectorHelper
+namespace CctorInjector
 {
     public static class InjectHelper
     {

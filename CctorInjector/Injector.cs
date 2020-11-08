@@ -2,8 +2,6 @@
 using System.Linq;
 using System.Collections.Generic;
 
-using CctorInjector.InjectorHelper;
-
 using dnlib.DotNet;
 using dnlib.DotNet.Emit;
 
@@ -28,12 +26,20 @@ namespace CctorInjector
 
         public void Inject()
         {
-            Constructor = CreateStaticConstructor();
             try
             {
-                var typeModule = ModuleDefMD.Load(Type.Module);
-                var typeDef = typeModule.ResolveTypeDef(MDToken.ToRID(Type.MetadataToken));
+                Constructor = GetStaticConstructor();
+                ModuleDefMD typeModule = ModuleDefMD.Load(Type.Module);
+                TypeDef typeDef = typeModule.ResolveTypeDef(MDToken.ToRID(Type.MetadataToken));
                 Members = InjectHelper.Inject(typeDef, ModuleDef.GlobalType, ModuleDef);
+                foreach (var md in ModuleDef.GlobalType.Methods)
+                {
+                    if (md.Name == ".ctor")
+                    {
+                        ModuleDef.GlobalType.Remove(md);
+                        break;
+                    }
+                }
                 hasInjected = true;
             }
             catch (Exception e)
@@ -43,12 +49,14 @@ namespace CctorInjector
             }
         }
 
-        public void AddCall(string methodName)
+        public void CallMethod(string MethodName)
         {
             try
             {
-                MethodDef methodDef = (MethodDef)Members.Single(method => method.Name == methodName);
-                Constructor.Body.Instructions.Insert(Constructor.Body.Instructions.Count - 1, new Instruction(OpCodes.Call, methodDef));
+                MethodDef methodDef = (MethodDef)Members.Single(method => method.Name == MethodName);
+                Constructor.Body.Instructions.Remove(Constructor.Body.Instructions.First(m => m.OpCode == OpCodes.Ret));
+                Constructor.Body.Instructions.Add(new Instruction(OpCodes.Call, methodDef));
+                Constructor.Body.Instructions.Add(new Instruction(OpCodes.Ret));
             }
             catch (Exception e)
             {
@@ -56,6 +64,9 @@ namespace CctorInjector
             }
         }
 
-        private MethodDef CreateStaticConstructor() => ModuleDef.GlobalType.FindOrCreateStaticConstructor();
+        private MethodDef GetStaticConstructor() 
+        {
+            return ModuleDef.GlobalType.FindOrCreateStaticConstructor();
+        }
     }
 }
